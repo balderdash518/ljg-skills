@@ -1,9 +1,9 @@
 #!/bin/bash
 # ljg-push: sync updated ljg-* skills to github repo (ljg-skills),
-# pushing to master (org-mode style) then md (markdown style).
+# pushing Markdown skills to master.
 #
 # Usage:
-#   bash Push.sh             # detect + push both branches
+#   bash Push.sh             # detect + push master
 #   bash Push.sh --dry-run   # show what would happen, don't push
 #   bash Push.sh --force     # skip detect, sync all ljg-* skills
 
@@ -98,118 +98,17 @@ bump_version() {
   echo "$new"
 }
 
-# Convert one org file to a markdown sibling.
-#   - Leading #+key: header block → YAML frontmatter (--- fenced, filetags → tags)
-#   - Headings: * → #, ** → ## (level-preserving)
-#   - #+ATTR_* lines dropped; #+begin_src/#+end_src → ``` fences
-#   - [[file:path]] → ![](path)
-orgfile_to_md() {
-  local src="$1" dst="$2"
-  awk '
-    BEGIN { inhdr = -1 }   # -1 not started, 1 inside header, 0 closed
-    /^#\+[A-Za-z_]+:/ && inhdr != 0 {
-      if (inhdr == -1) { print "---"; inhdr = 1 }
-      line = $0
-      sub(/^#\+/, "", line)
-      key = line; sub(/:.*/, "", key); key = tolower(key)
-      val = line; sub(/^[A-Za-z_]+:[ \t]*/, "", val)
-      if (key == "filetags") {
-        gsub(/:/, " ", val); gsub(/^[ \t]+|[ \t]+$/, "", val)
-        printf "tags: %s\n", val
-      } else {
-        printf "%s: %s\n", key, val
-      }
-      next
-    }
-    { if (inhdr == 1) { print "---"; inhdr = 0 } }
-    /^#\+ATTR/ { next }
-    /^#\+begin_src/ { sub(/^#\+begin_src[ \t]*/, "```"); print; next }
-    /^#\+end_src/ { print "```"; next }
-    /^#\+begin_quote/ { next }
-    /^#\+end_quote/ { next }
-    /^\*+ / {
-      n = 0; while (substr($0, n + 1, 1) == "*") n++
-      hashes = ""; for (i = 0; i < n; i++) hashes = hashes "#"
-      print hashes substr($0, n + 1)
-      next
-    }
-    {
-      line = $0
-      while (match(line, /\[\[file:[^]]+\]\]/)) {
-        path = substr(line, RSTART + 7, RLENGTH - 9)
-        line = substr(line, 1, RSTART - 1) "![](" path ")" substr(line, RSTART + RLENGTH)
-      }
-      print line
-    }
-  ' "$src" > "$dst"
-}
-
-# Apply markdown-ization to a skill directory.
-#   1. Every *.org file → converted *.md sibling (orgfile_to_md), .org removed,
-#      references to the renamed file rewritten across all md files.
-#   2. String swaps in all *.md files (assets/ excluded):
-#      - File-extension refs: __qa.org → __qa.md, etc.
-#      - Keywords: org-mode → markdown
-#      - Org-style format instructions: *bold* rule, heading-level rule,
-#        "Org 文件头", #+title:-style example lines → YAML keys
-# Does NOT touch: *bold* markers inside prose (markdown italics ambiguity).
-mdize_skill() {
-  local skill_dir="$1"
-
-  # 1) org files → md siblings
-  local orgfiles=() renames=()
-  while IFS= read -r f; do orgfiles+=("$f"); done < <(find "$skill_dir" -name '*.org' -not -path '*/assets/*' 2>/dev/null)
-  local org
-  for org in ${orgfiles[@]+"${orgfiles[@]}"}; do
-    orgfile_to_md "$org" "${org%.org}.md"
-    rm "$org"
-    renames+=("$(basename "$org")")
-  done
-
-  # 2) string swaps across all md files
-  local files=()
-  while IFS= read -r f; do files+=("$f"); done < <(find "$skill_dir" -name '*.md' -not -path '*/assets/*' 2>/dev/null)
-  local file r
-  for file in ${files[@]+"${files[@]}"}; do
-    sed -i '' \
-      -e 's/__qa\.org/__qa.md/g' \
-      -e 's/__paper\.org/__paper.md/g' \
-      -e 's/__think\.org/__think.md/g' \
-      -e 's/__concept\.org/__concept.md/g' \
-      -e 's/__rank\.org/__rank.md/g' \
-      -e 's/__plain\.org/__plain.md/g' \
-      -e 's/template\.org/template.md/g' \
-      -e 's/org-mode/markdown/g' \
-      -e 's/Org-mode/Markdown/g' \
-      -e 's/加粗用 `\*bold\*`（单星号），禁止 `\*\*bold\*\*`/加粗用 `**bold**`（双星号）/g' \
-      -e 's/标题层级从 `\*` 开始/标题层级从 `#` 开始/g' \
-      -e 's/Org 文件头/Markdown 文件头/g' \
-      "$file"
-    sed -E -i '' \
-      -e 's/^#\+(title|subtitle|date|filetags|identifier|source|authors|venue):/\1:/' \
-      "$file"
-    for r in ${renames[@]+"${renames[@]}"}; do
-      sed -i '' "s/${r//./\\.}/${r%.org}.md/g" "$file"
-    done
-  done
-}
-
-# Sync one skill: rsync local → repo path, optionally apply mdize.
+# Sync one skill: rsync local → repo path.
 sync_skill() {
   local name="$1"
-  local apply_mdize="$2"   # 0|1
   local target="$SKILLS_REPO/skills/$name"
   rsync -a --delete --exclude='.git' "$SKILLS_LOCAL/$name/" "$target/"
-  if [ "$apply_mdize" = "1" ]; then
-    mdize_skill "$target"
-  fi
 }
 
 # Push one branch with given commit message prefix.
 push_branch() {
   local branch="$1"
-  local mdize="$2"   # 0|1
-  local prefix="$3"  # "feat" or "feat(md)"
+  local prefix="$2"
 
   log "=== Branch: $branch ==="
   cd "$SKILLS_REPO"
@@ -244,9 +143,9 @@ push_branch() {
   fi
 
   for name in $skills; do
-    log "  syncing $name$([ "$mdize" = "1" ] && echo " (mdize)")"
+    log "  syncing $name"
     [ "$DRY_RUN" = "1" ] && continue
-    sync_skill "$name" "$mdize"
+    sync_skill "$name"
   done
 
   if [ "$DRY_RUN" = "1" ]; then
@@ -322,7 +221,7 @@ UPDATED=$(detect_updates)
 if [ "$FORCE" = "1" ]; then
   log "  --force: will sync all local ljg-* skills"
 elif [ -z "$UPDATED" ]; then
-  log "  No diff vs current branch — md branch may still need attention."
+  log "  No diff vs current branch."
 fi
 
 if [ "$DRY_RUN" = "1" ]; then
@@ -336,11 +235,7 @@ if [ "$DRY_RUN" = "1" ]; then
   fi
 fi
 
-# Always run both branches — each branch does its own detect + early-skip.
-# Don't exit early on "no master diff" because md branch may still have changes
-# (mdize transformations create per-branch divergence from the org-style local).
-push_branch master 0 "feat"
-push_branch md     1 "feat(md)"
+push_branch master "feat"
 
 log ""
 log "Done."

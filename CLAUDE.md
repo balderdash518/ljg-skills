@@ -96,9 +96,9 @@ The most complex skill with multiple rendering modes:
 
 ### Shared Conventions
 
-**Org-mode output** (ljg-paper, ljg-plain, ljg-writes):
-- Bold: `*text*` (single asterisk, not `**`)
-- Filenames: `{timestamp}--{title}__{type}.org`
+**Markdown output** (ljg-paper, ljg-plain, ljg-writes):
+- Bold: `**text**`
+- Filenames: `{timestamp}--{title}__{type}.md`
 - Output directory: `~/Documents/notes/`
 - Timestamps: `date +%Y%m%dT%H%M%S`
 

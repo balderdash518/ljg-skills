@@ -1,6 +1,6 @@
 # Push Workflow
 
-一键同步 ljg-* skills 到 github repo（master + md 双分支）。
+一键同步 ljg-* Markdown skills 到 github repo（master 分支）。
 
 ## Voice Notification
 
@@ -37,7 +37,7 @@ bash Push.sh --skip-readme-check
 
 | 用户说 | 标志 | 效果 |
 |--------|------|------|
-| 默认 | （无标志）| README check + 检测变更 + 双分支推送 |
+| 默认 | （无标志）| README check + 检测变更 + master 推送 |
 | "dry-run", "看一下" | `--dry-run` | 只列出会做什么，不真推（README check 跳过）|
 | "force", "强推" | `--force` | 跳过 detect，强制 rsync 所有 ljg-* |
 | "README 已审" | `--skip-readme-check` | 跳过 README 一致性 gate（其他 check 仍跑）|
@@ -57,12 +57,7 @@ bash ~/.claude/skills/ljg-push/Tools/Push.sh [--dry-run|--force]
    - 对每个有差异的 skill：`rsync -a --delete --exclude='.git'`
    - bump patch version (plugin.json + marketplace.json)
    - `git add` + `git commit` + `git push origin master`
-4. *Md 推送*：
-   - `git checkout md` + `git pull --rebase`
-   - 对每个有差异的 skill：rsync + 应用 markdown 化（`mdize_skill` 函数——含 org 文件本体转换：`orgfile_to_md` 转 YAML 头/`#` 标题后删 .org，引用全局改写）
-   - bump patch version
-   - `git add` + `git commit` + `git push origin md`
-5. *Report*：列出推送结果 + 仍需手工 review 的差异清单
+4. *Report*：列出推送结果
 
 ## Step 3: 报告
 
@@ -75,10 +70,6 @@ bash ~/.claude/skills/ljg-push/Tools/Push.sh [--dry-run|--force]
   - ljg-card
 
 master @ v1.17.13 → pushed
-md     @ v1.0.8   → pushed
-
-仍需手工 review（自动转换不覆盖的差异）:
-  - ljg-xxx/SKILL.md  (正文 `*bold*` 标记——斜体歧义，脚本不动)
 
 ══════════════════════════════════
 ```
@@ -95,7 +86,6 @@ md     @ v1.0.8   → pushed
 
 ## 验收
 
-- 两个分支都有新 commit（除非检测到无变更）
-- 远端 origin/master 和 origin/md 都更新
+- master 有新 commit（除非检测到无变更）
+- 远端 origin/master 已更新
 - 报告里列出版本号和推送的 skills
-- 任何 markdown 化未覆盖的差异都列在 review checklist 里

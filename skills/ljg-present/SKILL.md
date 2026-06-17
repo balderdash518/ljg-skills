@@ -1,6 +1,6 @@
 ---
 name: ljg-present
-description: "演讲铸造器（Outline-Faithful）。基于 orgmode/markdown outline 层级 1:1 视觉化呈现——色块大字、ultra-bold 错位，原文不动只做美化。三档主题色 black/red/yellow（默认 black 或按 filetags 推断），可用 -r/-b/-y 显式覆盖；可用 --cyber 走黑底绿字 cyber-hacker 风。使用时用户会说：'讲这个'、'present'、'做成演讲'、'呈现一下'、'铸成演示'、'做个 slides'、'标语流'、'宣言体'、'slogan'、'manifesto'、'按 outline 美化'。输出单文件 HTML 到 ~/Downloads/。"
+description: "演讲铸造器（Outline-Faithful）。基于 Markdown outline 层级 1:1 视觉化呈现——色块大字、ultra-bold 错位，原文不动只做美化。三档主题色 black/red/yellow（默认 black 或按 YAML tags 推断），可用 -r/-b/-y 显式覆盖；可用 --cyber 走黑底绿字 cyber-hacker 风。使用时用户会说：'讲这个'、'present'、'做成演讲'、'呈现一下'、'铸成演示'、'做个 slides'、'标语流'、'宣言体'、'slogan'、'manifesto'、'按 outline 美化'。输出单文件 HTML 到 ~/Downloads/。"
 user_invocable: true
 version: "3.0.0"
 ---
@@ -19,7 +19,7 @@ version: "3.0.0"
 
 **Outline → 视觉化渲染器**：
 
-- 输入 = orgmode 文件（`*` `**` 层级 + 列表 + 表格 + 强调）
+- 输入 = Markdown 文件（`#` `##` 层级 + 列表 + 表格 + 强调）
 - 输出 = 视觉美化的 slogan-style HTML，**1:1 保留 outline 结构**
 - 不抽提、不重写、不浓缩——只决定**怎么把这一行/这一节渲染为页面**
 
@@ -28,8 +28,8 @@ version: "3.0.0"
 - **left-aligned 舞台美学**——文字左对齐，超大字号自然撑屏
 - **超大字 ultra-bold**——单字 70vmin、长句 11vmin
 - **多行错位**——按 outline 嵌套深度自动 indent 0/1/2
-- **关键词自动换色**——`*强调*` `~code~` 自动 hl
-- **章节切换打节拍**——一级标题 `*` → emphasis 封面页，其余 → theme 页
+- **关键词自动换色**——`**强调**`、inline code 自动 hl
+- **章节切换打节拍**——一级标题 `#` → emphasis 封面页，其余 → theme 页
 
 ## 核心哲学
 
@@ -44,44 +44,44 @@ version: "3.0.0"
 
 唯一允许的"动"是：**物理分页**（一段太长拆成多页），并保持视觉一致性。
 
-## Orgmode → 页面映射规则
+## Markdown → 页面映射规则
 
 ### 标题层级
 
-| Org 元素 | 页面 |
+| Markdown 元素 | 页面 |
 |---|---|
-| `* 一级标题` | 独占 **emphasis** 封面页（accent 底色） |
-| `** 二级标题` | 独占 **theme** 页（大字标题独占一页） |
-| `*** 三级标题`+ | 独占 theme 页（字号降一档） |
+| `# 一级标题` | 独占 **emphasis** 封面页（accent 底色） |
+| `## 二级标题` | 独占 **theme** 页（大字标题独占一页） |
+| `### 三级标题`+ | 独占 theme 页（字号降一档） |
 
 ### 内容元素
 
-| Org 元素 | 页面行为 |
+| Markdown 元素 | 页面行为 |
 |---|---|
 | 段落 | theme 页，按句号/换行/字数分页 |
 | `- 列表项` | theme 页，每项一行，indent 按嵌套深度（0/1/2） |
 | `1. 编号列表` | 同上，保留序号前缀 |
 | 嵌套列表 | 子项 indent +1（最多 indent=2） |
 | `\| 表格 \|` | 单页或多页，保留表格结构（首行加粗） |
-| `*强调*` | 自动 `hl: true` |
-| `~code~` 或 `=verbatim=` | 自动 `hl: true` |
+| `**强调**` | 自动 `hl: true` |
+| inline code | 自动 `hl: true` |
 | `「」` 内的关键词 | 视觉单元（保留括号，不强制 hl） |
 | 引用 `> ...` | theme 页，indent 1 显示 |
 | 分隔符 `-----` | 独立 emphasis 休止页（无内容，纯色块） |
-| `#+begin_example` 块 | 独立 pre 页（monospace 渲染 ASCII art） |
+| fenced code block | 独立 pre 页（monospace 渲染 ASCII art） |
 
 ### 文件级元数据
 
-| Org 元素 | 用途 |
+| Markdown 元数据 | 用途 |
 |---|---|
-| `#+title:` | → JSON `title`（浏览器 tab） |
-| `#+author:` 或 `#+date:` | → JSON `subtitle`（页脚右下） |
-| `#+filetags:` | 用于推断 theme（见下） |
-| `#+identifier:` | 忽略 |
+| YAML `title` | → JSON `title`（浏览器 tab） |
+| YAML `author` 或 `date` | → JSON `subtitle`（页脚右下） |
+| YAML `tags` | 用于推断 theme（见下） |
+| YAML `identifier` | 忽略 |
 
 ### Theme 推断
 
-**优先级**：显式参数 > filetags 推断 > 默认 black
+**优先级**：显式参数 > YAML tags 推断 > 默认 black
 
 显式覆盖（参数）：
 - `-r` / `--theme=red` → red
@@ -89,13 +89,13 @@ version: "3.0.0"
 - `-y` / `--theme=yellow` → yellow
 - `--cyber` → cyber-hacker（黑底绿字 + CRT 扫描线 + HUD + 终端光标）
 
-filetags 自动推断：
+tags 自动推断：
 
-| filetags 含 | theme | 调性 |
+| tags 含 | theme | 调性 |
 |---|---|---|
-| `:share:` `:talk:` `:manifesto:` `:keynote:` | `red` | 宣言、号召 |
-| `:essay:` `:think:` `:learn:` `:note:` | `black` | 沉思、论证 |
-| `:critique:` `:warn:` `:rant:` | `yellow` | 反讽、警觉 |
+| `share` `talk` `manifesto` `keynote` | `red` | 宣言、号召 |
+| `essay` `think` `learn` `note` | `black` | 沉思、论证 |
+| `critique` `warn` `rant` | `yellow` | 反讽、警觉 |
 | 都没有 | `black` | 默认沉思调 |
 
 ### 分页规则（内容多时）
@@ -118,7 +118,7 @@ filetags 自动推断：
 
 ### 自动 emphasis（节拍）
 
-- 所有 `* 一级标题` → emphasis 封面页
+- 所有 `# 一级标题` → emphasis 封面页
 - 文件首页（标题或第一行非空文本）→ emphasis 开场页（如已是一级标题则合并）
 - 文件末页（最后一段或最后一项）→ emphasis 收束页
 - `-----` 分隔符 → emphasis 休止页
@@ -128,21 +128,23 @@ filetags 自动推断：
 
 ### 自动 hl（高亮）
 
-- org `*强调*` → `hl: true`
-- org `~code~` `=verbatim=` → `hl: true`
+- Markdown `**强调**` → `hl: true`
+- inline code → `hl: true`
 - emphasis 页内的 hl 自动忽略（CSS `color: inherit`）
 
 ## 映射举例
 
-**输入**（org 节选）：
+**输入**（Markdown 节选）：
 
-```org
-#+title: 美团分享
-#+filetags: :share:
+```markdown
+---
+title: 美团分享
+tags: [share]
+---
 
-* AI
+# AI
 
-** 为什么说 AI 是一次革命？
+## 为什么说 AI 是一次革命？
 
 人类革命：能力让渡的层级跃迁
 
@@ -154,12 +156,12 @@ filetags 自动推断：
 
 | # | 类型 | 内容 | 来源 |
 |---|---|---|---|
-| 1 | emphasis | 「AI」 | `* AI`（一级标题封面） |
-| 2 | theme | 「为什么说 AI 是一次革命？」 | `** ...` 二级标题独占页 |
+| 1 | emphasis | 「AI」 | `# AI`（一级标题封面） |
+| 2 | theme | 「为什么说 AI 是一次革命？」 | `## ...` 二级标题独占页 |
 | 3 | theme | 「人类革命：能力让渡的层级跃迁」 | 段落，单句 |
 | 4 | theme | 两行错位：「『人之为人』重新定义」/「社会组织重排」 | 列表 ≤4 项一页 |
 
-theme 自动选 `red`（filetags `:share:`），title=`美团分享`。
+theme 自动选 `red`（tags 包含 `share`），title=`美团分享`。
 
 ## 视觉规范
 
@@ -258,25 +260,24 @@ cyber 主题额外字体（用于 HUD/footer/pre）：
 
 1. **获取内容**（文件 → Read / 粘贴 → 直接用 / URL → WebFetch）
 2. **解析 outline**：
-   - org：识别 `*` `**` 标题层级、`-` `1.` 列表、`|...|` 表格、`*强调*` / `~code~`、`#+begin_example` 块
-   - markdown（兼容）：`#` `##` 标题、`-` `*` 列表、`|` 表格、`**强调**`、` ``` ` 代码块
+   - Markdown：识别 `#` `##` 标题、`-` `*` 列表、`|` 表格、`**强调**`、fenced code block
    - 纯文本（fallback）：按空行分段，每段一页
-3. **推断 theme**：显式参数 > `#+filetags:` > 默认 black
+3. **推断 theme**：显式参数 > YAML `tags` > 默认 black
 4. **应用映射规则**生成 slides 数组：
-   - `*` 标题 → emphasis 封面
-   - `**`+ 标题 → theme 独占页
+   - `#` 标题 → emphasis 封面
+   - `##`+ 标题 → theme 独占页
    - 段落 → theme 页（按分页规则）
    - 列表 → theme 页（错位 indent + 分页规则）
    - 表格 → theme 页（保留结构 + 分页规则）
    - 强调 → 自动 hl
-   - example 块 → 独立 pre 页
+   - fenced code block → 独立 pre 页
 5. **Read** `assets/slogan_template.html`（cyber 主题需在模板基础上注入扫描线/HUD/光标 CSS）
 6. **替换占位符**：
-   - `{{TITLE}}` → 文件 `#+title:` 或显式参数
-   - `{{SUBTITLE}}` → `#+author:` `#+date:` 拼接，或留空
+   - `{{TITLE}}` → YAML `title` 或显式参数
+   - `{{SUBTITLE}}` → YAML `author` `date` 拼接，或留空
    - `{{THEME}}` → 推断或显式参数（black|red|yellow|cyber）
    - `{{SLIDES_JSON}}` → JSON.stringify(slides)
-7. **写文件**到 `~/Downloads/{name}.html`（`{name}` 取自 `#+title:` 或文件名，去标点，≤ 20 字）
+7. **写文件**到 `~/Downloads/{name}.html`（`{name}` 取自 YAML `title` 或文件名，去标点，≤ 20 字）
 8. **报告路径** + 翻页键 `→ ← Space F Home End`
 
 ## 品味准则
@@ -285,7 +286,7 @@ cyber 主题额外字体（用于 HUD/footer/pre）：
 - **一级标题 = emphasis 封面**——天然的章节断点，自动节拍
 - **二级标题 = 独占 theme 页**——给标题应有的重量
 - **列表错位**——靠 indent 0/1/2 体现 outline 嵌套深度
-- **`*强调*` 自动 hl**——尊重作者的标记意图
+- **Markdown emphasis 自动 hl**——`**强调**` 尊重作者的标记意图
 - **拆页保持一致**——同一逻辑块的视觉处理一致（字号档位/缩进/底色）
 - **页脚保留**——页码 + 副标题不要删，那是品牌的冷气
 - **左对齐不居中**——VACAT 美学的灵魂

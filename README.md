@@ -7,17 +7,11 @@
 使用 [skills CLI](https://github.com/vercel-labs/skills)（基于 `npx`）一行安装：
 
 ```bash
-# 安装全部技能（全局，org-mode 格式）
+# 安装全部技能（全局，Markdown 格式）
 npx skills add lijigang/ljg-skills -g --all
-
-# 安装全部技能（Markdown 格式，适用于 Obsidian / VSCode / Notion 等）
-npx skills add lijigang/ljg-skills#md -g --all
 
 # 安装单个技能
 npx skills add lijigang/ljg-skills -g --skill ljg-card
-
-# 安装单个技能（Markdown 格式）
-npx skills add lijigang/ljg-skills#md -g --skill ljg-card
 
 # 安装多个指定技能
 npx skills add lijigang/ljg-skills -g --skill ljg-card --skill ljg-learn
@@ -33,7 +27,6 @@ npx skills add lijigang/ljg-skills -l
 | `-g` | 全局安装到 `~/.claude/skills/`（推荐）。不加则装到当前项目 `.claude/skills/` |
 | `--skill <name>` | 指定安装某个技能，可重复使用 |
 | `--all` | 安装仓库内全部技能 |
-| `#md` | 从 `md` branch 安装 Markdown 格式版本（默认为 org-mode） |
 | `-l` | 仅列出可用技能，不安装 |
 
 ### ljg-card 依赖
@@ -47,11 +40,7 @@ cd ~/.claude/skills/ljg-card && npm install && npx playwright install chromium
 ### 替代方式：git clone
 
 ```bash
-# org-mode 版本
 git clone https://github.com/lijigang/ljg-skills.git ~/.claude/plugins/ljg-skills
-
-# Markdown 版本
-git clone -b md https://github.com/lijigang/ljg-skills.git ~/.claude/plugins/ljg-skills
 ```
 
 ## 技能
@@ -73,10 +62,10 @@ git clone -b md https://github.com/lijigang/ljg-skills.git ~/.claude/plugins/ljg
 | **ljg-read** | 伴读 — 陪你读任何文本，英文三层翻译（信达雅）+ 结构标注 + 深度提问 + 跨领域旁逸 |
 | **ljg-relationship** | 关系分析 — 五层结构诊断 + 精神分析，通过对话引导帮用户"看见"关系真实结构 |
 | **ljg-roundtable** | 圆桌讨论 — 求真导向的结构化多人辩证对话，每轮生成 ASCII 思考框架图 |
-| **ljg-travel** | 旅行研究 — 输入城市名，生成深度文化研究文档（org-mode）+ 便携卡片（PNG） |
+| **ljg-travel** | 旅行研究 — 输入城市名，生成深度文化研究文档（Markdown）+ 便携卡片（PNG） |
 | **ljg-skill-map** | 技能地图 — 扫描所有已安装技能，渲染可视化总览 |
 | **ljg-present** | 演讲铸造器 — 默认高桥流（一页一关键词、奶白底墨字）；`-s` 标语流（VACAT/BIG STUDIOS 风：黑红双色块、ultra-bold、完整断言句撑屏）|
-| **ljg-push** | 推送引擎 — 把本地 `~/.claude/skills/ljg-*` 一键同步到 github repo（master + md 双分支）|
+| **ljg-push** | 推送引擎 — 把本地 `~/.claude/skills/ljg-*` 一键同步到 github repo（Markdown master 分支）|
 
 
 ## 工作流
@@ -90,9 +79,4 @@ git clone -b md https://github.com/lijigang/ljg-skills.git ~/.claude/plugins/ljg
 
 ## 输出格式
 
-技能提供两种输出格式，通过不同 branch 安装，功能完全相同：
-
-| Branch | 格式 | 适用场景 |
-|--------|------|----------|
-| `master`（默认） | Org-mode（`.org`） | Emacs / Denote 用户 |
-| `md` | Markdown（`.md`） | Obsidian / VSCode / Notion 等 Markdown 生态用户 |
+所有文本类技能默认输出 Markdown（`.md`），适用于 Obsidian / VSCode / Notion 等 Markdown 生态。
